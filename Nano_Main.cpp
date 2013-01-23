@@ -59,6 +59,7 @@ public:
 		// Define joysticks being used at USB port #1 on the Drivers Station
 		operatorGamepad = new Joystick(1);
 
+
 		// Initialize counters to record the number of loops completed in autonomous and teleop modes
 		m_autoPeriodicLoops = 0;
 		m_disabledPeriodicLoops = 0;
