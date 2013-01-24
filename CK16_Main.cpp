@@ -85,10 +85,10 @@ public:
 		EXP_KEY = "exp";
 		
 		// Initialize the CAN Jaguars
-		Front_R = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("FR_CAN_ID"));
-		Front_L = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("FL_CAN_ID"));
-		Rear_R = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("RR_CAN_ID"));
-		Rear_L = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("RL_CAN_ID"));
+		Front_R = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("FR_CAN_ID"), CANJaguar::kPosition);
+		Front_L = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("FL_CAN_ID"), CANJaguar::kPosition);
+		Rear_R = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("RR_CAN_ID"), CANJaguar::kPosition);
+		Rear_L = new CANJaguar((UINT8)CAN_IDS_CSV->GetValue("RL_CAN_ID"), CANJaguar::kPosition);
 		printf("TEAM 79 FOR THE WIN!\n");
 		
 		// Initialize Robot Drive System Using Jaguars
@@ -138,7 +138,6 @@ public:
 		exp = 3.0;
 		
 		buttonWasDown = false;
-		
 		// Initialize settings for encoder drive PIDControllers
 //		Drive_PID_Controller->SetOutputRange(-0.2, 0.2);
 //		Drive_PID_Controller->SetTolerance(0.1);
@@ -147,13 +146,13 @@ public:
 //		Goal_Align_PID->SetOutputRange(-0.2, 0.2);
 //		Goal_Align_PID->SetTolerance(0.1);
         
+		// Set encoders
+        Front_R->ConfigEncoderCodesPerRev(360);
+        Front_L->ConfigEncoderCodesPerRev(360);
+		
         // Set each drive motor to have an encoder to be its friend
         Front_R->SetPositionReference(CANJaguar::kPosRef_QuadEncoder);
         Front_L->SetPositionReference(CANJaguar::kPosRef_QuadEncoder);
-        
-        // Set encoders
-        Front_R->ConfigEncoderCodesPerRev(360);
-        Front_L->ConfigEncoderCodesPerRev(360);
         
 		
 		printf("RobotInit() completed.\n");
@@ -184,11 +183,11 @@ public:
 		m_telePeriodicLoops = 0;				// Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
 		
-		// Output drive mapping exponent to SmartDashboard
-		SmartDashboard::PutNumber(EXP_KEY, exp);
-		
 		// Default autoPilot to off
 		autoPilot = false;
+		
+		Front_R->EnableControl();
+		Front_L->EnableControl();
 		
 		// Enable Goal Align PID
 //		Goal_Align_PID->Disable(); // Stop previous enables
@@ -259,6 +258,19 @@ public:
 	
 	double calculateDriveOutputForTeleop(double input)
 	{
+//		if(fabs(input) < 0.05)
+//		{
+//			// Stop if stick is near zero
+//			return 0.0;
+//		}
+//		else
+//		{
+//			double mapping;
+//			mapping = 1.08 * ((3 * pow(fabs(input), 4)) + 0.2);
+//			mapping = (input >= 0) ? mapping : -mapping; // Change to negative if the input was negative
+//			return mapping;
+//		}
+		
 		if(fabs(input) < 0.05)
 		{
 			// Stop if stick is near zero
@@ -267,9 +279,19 @@ public:
 		else
 		{
 			double mapping;
-			mapping = 1.08 * ((3 * pow(fabs(input), 4)) + 0.2);
-			mapping = (input >= 0) ? mapping : -mapping; // Change to negative if the input was negative
-			return mapping;
+			
+			if(fabs(input) <= 0.7)
+			{
+				mapping = 0.33 * pow(fabs(input), 2) + 0.2;
+				mapping = (input >= 0) ? mapping : -mapping; // Change to negative if the input was negative
+				return mapping;
+			}
+			else
+			{
+				mapping = 3.57 * fabs(input) - 2.14;
+				mapping = (input >= 0) ? mapping : -mapping; // Change to negative if the input was negative
+				return mapping;
+			}
 		}
 	}
 	

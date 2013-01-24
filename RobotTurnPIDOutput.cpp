@@ -17,5 +17,5 @@ void RobotTurnPIDOutput::PIDWrite(float output)
 {
 	// -1.0 is max left, +1.0 is max right. The right motor is
 	// inverted so that whatever value is fed in makes sense.
-	r_drive->SetLeftRightMotorOutputs(output, output * -1);
+	r_drive->SetLeftRightMotorOutputs(output * -1, output);
 }
